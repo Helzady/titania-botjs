@@ -4,7 +4,7 @@ module.exports = {
     data: new Discord.SlashCommandBuilder()
         .setName('unban') // nome do comando
         .setDescription('Desbanir um usuário') // descrição do comando
-        .addStringOption(option =>
+        .addUserOption(option =>
             option
                 .setName('user')
                 .setDescription('Usuário a ser banido')
