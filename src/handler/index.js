@@ -27,6 +27,7 @@ for (const folder of commandFolders) {
 			console.log(`[WARNING] O comando em ${filePath} está faltando a propriedade "data" ou "execute".`);
 		}
 	}
+    
 }
 
 
