@@ -6,52 +6,40 @@ module.exports = {
         .setDescription('Banir um usuário') // descrição do comando
         .addUserOption(option =>
             option
-                .setName('usuário')
+                .setName('user')
                 .setDescription('Usuário a ser banido')
                 .setRequired(true))
         .addStringOption(option =>
             option
                 .setName('motivo')
-                .setDescription('Motivo do banimento')
+                .setDescription('Insira um motivo')
+                .setAutocomplete(true)
                 .setRequired(false)),
 
     async execute(interaction) {
-        const user = interaction.options.getUser('usuário');
-        const reason = interaction.options.getString('motivo') || 'Nenhum motivo fornecido';
-
-        if (!interaction.member.permissions.has('BAN_MEMBERS')) {
+        
+        if (!interaction.member.permissions.has(Discord.PermissionFlagsBits.BanMembers)) {
+            interaction.reply(`Você não possui poermissão para utilizar este comando.`);
+        } else {
+            let userr = interaction.options.getUser("user");
+            let user = interaction.guild.members.cache.get(userr.id)
+            let motivo = interaction.options.getString("motivo");
+            if (!motivo) motivo = "Não definido.";
+    
             let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.avatarURL() })
-            .setDescription('Você não tem permissão para banir membros!')
-
-            return interaction.reply({ embeds: [embed] });
+            .setColor("Green")
+            .setDescription(`O usuário ${user} (\`${user.id}\`) foi banido com sucesso!`);
+    
+            let erro = new Discord.EmbedBuilder()
+            .setColor("Red")
+            .setDescription(`Não foi possível banir o usuário ${user} (\`${user.id}\`) do servidor!`);
+    
+            user.ban({ reason: [motivo] }).then( () => {
+                interaction.reply({ embeds: [embed] })
+            }).catch(e => {
+                interaction.reply({ embeds: [erro] })
+            })
         }
 
-        if (!user.bannable) {
-            let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setDescription('Não é possível banir este usuário!')
-
-            return interaction.reply({ embeds: [embed], ephemeral: true });
-        }
-
-        try {
-            await user.ban({ reason });
-
-            let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setDescription(`Usuário ${user.tag} foi banido com sucesso!`)
-            
-            interaction.reply({ embeds: [embed], ephemeral: true });
-        } catch (error) {
-            console.error(error);
-
-            let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setDescription('Ocorreu um erro ao banir o usuário!')
-
-            interaction.reply({ embeds: [embed], ephemeral: true });
-        }
     },
 };

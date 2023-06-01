@@ -4,45 +4,42 @@ module.exports = {
     data: new Discord.SlashCommandBuilder()
         .setName('unban') // nome do comando
         .setDescription('Desbanir um usuário') // descrição do comando
-        .addStringOption(option => option.setName('usuário').setDescription('Usuário a ser desbanido').setRequired(true)),
+        .addStringOption(option =>
+            option
+                .setName('user')
+                .setDescription('Usuário a ser banido')
+                .setRequired(true))
+        .addStringOption(option =>
+            option
+                .setName('motivo')
+                .setDescription('Insera um motivo')
+                .setAutocomplete(true)
+                .setRequired(false)),
 
     async execute(interaction) {
-        const userTag = interaction.options.getString('usuário');
-
-        if (!interaction.member.permissions.has('BAN_MEMBERS')) {
+        
+        if (!interaction.member.permissions.has(Discord.PermissionFlagsBits.BanMembers)) {
+            interaction.reply(`Você não possui poermissão para utilizar este comando.`);
+        } else {
+            let userr = interaction.options.getUser("user");
+            let user = interaction.guild.members.cache.get(userr.id)
+            let motivo = interaction.options.getString("motivo");
+            if (!motivo) motivo = "Não definido.";
+    
             let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.avatarURL()})
-            .setDescription('Você não tem permissão para desbanir membros!')
-
-            return interaction.reply({ embeds: [embed] });
+            .setColor("Green")
+            .setDescription(`O usuário ${user} (\`${user.id}\`) foi banido com sucesso!`);
+    
+            let erro = new Discord.EmbedBuilder()
+            .setColor("Red")
+            .setDescription(`Não foi possível banir o usuário ${user} (\`${user.id}\`) do servidor!`);
+    
+            user.ban({ reason: [motivo] }).then( () => {
+                interaction.reply({ embeds: [embed] })
+            }).catch(e => {
+                interaction.reply({ embeds: [erro] })
+            })
         }
 
-        const bannedUsers = await interaction.guild.bans.fetch();
-        const bannedUser = bannedUsers.find(user => user.user.tag === userTag);
-
-        if (!bannedUser) {
-            let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setDescription('Usuário não encontrado na lista de banimentos!')
-
-            return interaction.reply({ embeds: [embed], ephemeral: true });
-        }
-
-        try {
-            await interaction.guild.members.unban(bannedUser.user);
-            let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setDescription(`Usuário ${userTag} foi desbanido com sucesso!`)
-
-            interaction.reply({ embeds: [embed], ephemeral: true });
-        } catch (error) {
-            console.error(error);
-            let embed = new Discord.EmbedBuilder()
-            .setColor('Random')
-            .setDescription('Ocorreu um erro ao desbanir o usuário!')
-
-            interaction.reply({ embeds: [embed], ephemeral: true });
-        }
     },
 };
